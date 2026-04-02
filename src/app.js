@@ -222,8 +222,8 @@ function renderHead(userAgent, webHost, forceMobileMode = false) {
   }
   // Generate CSS code
   let cssString = '@import url("/styles.css"); @import url("/small.css") (max-width: 350px);';
-  if (forceMobileMode) {
-    cssString = '@import url("/styles.css"); @import url("/small.css");';
+  if (forceMobileMode || userAgent.includes('Nintendo 3DS')) {
+    cssString = '@import url("/3ds.css");'
   }
   // Generate full header string
   // Documentation for Windows tile: https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/dn255024(v=vs.85)
@@ -249,12 +249,12 @@ function renderHead(userAgent, webHost, forceMobileMode = false) {
     ${iconEl}
     <!-- Web app manifest and Windows tile -->
     <link rel="manifest" href="manifest.json">
-    <meta name="application-name" content="ImageShare">
+    <meta name="application-name" content="Image Share">
     <meta name="msapplication-TileColor" content="#7e57c2">
     <meta name="msapplication-square150x150logo" content="img/maskable_icon_x192.png">
     <!-- Open Graph card -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="ImageShare" />
+    <meta property="og:title" content="Image Share" />
     <meta property="og:description" content="ImageShare is a web app for sending images and videos to another device, designed for low-end and legacy web browsers." />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
@@ -316,47 +316,54 @@ function renderMain(passedOptions) {
         </div>
       </div>
     `;
-  }
-  // Render rest of page
+  // No QR code so show the main page instead 
+  } else if (data.userAgent.includes('Nintendo 3DS') || data.forceMobileMode)  {
   htmlString += `
-      <!-- Main upload panel -->
-      <div class="panel">
-        <h3 class="panel-title">Upload File</h3>
-        <div class="body">
-          <form action="${data.forceMobileMode ? '/m/' : '/'}" id="upload-form" enctype="multipart/form-data" method="POST" onsubmit="document.getElementById('loading-container').style.display='block';">
-            <p><input name="img" id="imageshare-file-select" type="file" accept="image/*,video/*" /></p>
-            ${imgurClientId ? `
-            <p>
-              <input type="radio" id="upload-type-imageshare" name="upload-type" value="imageshare" class="imageshare-service-radio" checked>
-              <label for="upload-type-imageshare">Upload to ImageShare (temporary)</label>
-              <br />
-              <input type="radio" id="upload-type-imgur" name="upload-type" value="imgur" class="imageshare-service-radio">
-              <label for="upload-type-imgur">Upload to Imgur</label>
-            </p>
-            ` : ''}
-            <p><input name="submit" type="submit" id="imagshare-upload-btn" value="Upload" /></p>
-            <p id="loading-container" style="display:none;" align="center">
-              <img src="/img/loading.gif" alt="Loading">
-            </p>
-            <p>Maximum file size: ${uploadLimit} MB</p>
-          </form>
-          <hr>
-          <p>ImageShare is a web app for sending images and videos to another device, designed for low-end and legacy web browsers. ImageShare is open-source software, see the below links for more information and support.</p>
-          <p style="text-align: center; font-weight: bold;"><a href="https://github.com/corbindavenport/imageshare" target="_blank">github.com/corbindavenport/imageshare</a></p>
-          <p style="text-align: center; font-weight: bold;"><a href="https://discord.gg/tqJDRsmQVn" target="_blank">discord.gg/tqJDRsmQVn</a></p>
-          <p>If you find ImageShare useful, please consider donating to support development and server costs!</p>
-          <p style="text-align: center; font-weight: bold;"><a href="https://www.patreon.com/corbindavenport" target="_blank">patreon.com/corbindavenport</a></p>
-          <p style="text-align: center; font-weight: bold;"><a href="https://cash.app/$corbdav" target="_blank">cash.app/$corbdav</a> • <a href="https://paypal.me/corbindav" target="_blank">paypal.me/corbindav</a></p>
+      <div class="container">
+        <div class="page-header">
+          ${(data.userAgent.includes('Nintendo 3DS')) ? 
+            `<h1><img src="/img/logo_3ds.png" width="220" height="46" alt="Nintendo 3DS Image Share" /></h1>` 
+            : 
+            `<h1><img src="/img/logo.png" width="220" height="46" alt="Nintendo 3DS Image Share" /></h1>`
+          }
+        </div>
+        <div class="body">  
+            <div class="contents">
+              ${imgurClientId ? `
+                imgur support coming soon
+              ` : `
+                <div class="area-upload" style="display: block;">
+                  <form action="/" id="upload-form" enctype="multipart/form-data" method="POST" onsubmit="document.getElementById('loading-container').style.display='block';">
+                    <div class="upload-file-notice">Select software screenshots. </div>
+                    <p><input name="img" id="imageshare-file-select" type="file" accept="image/*" /></p>
+                    <div class="input-notice">Maximum file size: ${uploadLimit} MB</div>
+                    <div class="area-submit" style="display: block;">
+                      <p class="sns-name">Upload to Image Share?</p>
+                      <button name="submit" type="submit" id="imagshare-upload-btn" class="btn-submit"><p class="icon-post"></p><span>Upload</span></button>
+                      <p id="loading-container" style="display:none;" align="center">
+                        <img src="/img/loading.gif" alt="Loading">
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              `}
+          </div>
+        </div>
+        <div class="page-footer">
+          <div class="copyright-right">
+            <img src="/img/nintendo.png">
+          </div>
+          <ul>
+            ${data.forceMobileMode ? '<li><a class="link-text-left" href="/">Disable mobile mode</a></li>' : '<li><a class="link-text-left" href="/m/">Mobile mode</a></li>'}
+            <li><a class="link-text-left" href="privacy/">Privacy policy</a></li>
+            <br />
+            ${data.userAgent}
+          </ul>
         </div>
       </div>
-    </div>
-    <p class="footer">
-        ${data.forceMobileMode ? '<a href="/">Disable mobile mode</a>' : '<a href="/m/">Mobile mode</a>'} • <a href="privacy/">Privacy policy</a>
-        <br /><br />
-        ${data.userAgent}
-    </p>
-  </body>
+    </body>
   </html>`;
+  }
   return htmlString;
 }
 
